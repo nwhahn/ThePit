@@ -50,7 +50,7 @@ func Execute(query string) *sql.Rows {
 	} else {
 		defer queryResult.Close()
 	}
-	
+
 	return queryResult
 }
 
