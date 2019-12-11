@@ -1,0 +1,15 @@
+bitcoin_writer:
+    host     : 192.168.1.5
+    port     : 5432
+    user     : bitcoin_scripts_writer
+    password : kzZkFpNHhRDVqw7Z
+    database : prod
+    type     : postgres
+
+spy_writer:
+    host     : 192.168.1.5
+    port     : 5432
+    user     : spy_scripts_writer
+    password : 92ZC4tQQsTQV6DG5
+    database : prod
+    type     : postgres
