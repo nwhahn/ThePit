@@ -1,6 +1,6 @@
 import datetime as dt
 import glob
-import lib.logger as logger
+from lib.logger import get_logger, log_on_failure
 import os
 from argparse import ArgumentParser
 import lib.alerting as alerting
@@ -8,7 +8,7 @@ import lib.alerting as alerting
 import pandas as pd
 
 __app__ = 'symbols_download'
-logger = logger.get_logger(__name__, __app__)
+logger = get_logger(__name__, __app__)
 alert = alerting.get_alerter()
 
 arca_location = 'ftp://ftp.nyxdata.com/ARCASymbolMapping/ARCASymbolMapping.txt'
@@ -69,7 +69,7 @@ def main_impl(args) -> int:
         arca_df = arca_nyse_df(args.sep, arca_location)
 
         logger.info(f'Got dataframe of size: {arca_df.size}')
-        make_symlink(arca_df, args.path, 'symbols_arca', args.sep)
+        make_symlink(arca_df, args.path, 'arca', args.sep)
         alert.info("Created arca symlink and csv")
 
     if args.nyse:
@@ -77,7 +77,7 @@ def main_impl(args) -> int:
         nyse_df = arca_nyse_df(args.sep, nyse_location)
 
         logger.info(f'Got dataframe of size: {nyse_df.size}')
-        make_symlink(nyse_df, args.path, 'symbols_nyse', args.sep)
+        make_symlink(nyse_df, args.path, 'nyse', args.sep)
         alert.info("Created nyse symlink and csv")
 
     if args.nas_tr:
@@ -85,7 +85,7 @@ def main_impl(args) -> int:
         nas_tr_df = nasdaq_df(args.sep, nas_tr_location)[:-1]
 
         logger.info(f'Got dataframe of size: {nas_tr_df.size}')
-        make_symlink(nas_tr_df, args.path, 'symbols_nasdaq_traded', args.sep)
+        make_symlink(nas_tr_df, args.path, 'nasdaq_traded', args.sep)
         alert.info("Created nasdaq trade symlink and csv")
 
     if args.nas_ls:
@@ -93,12 +93,13 @@ def main_impl(args) -> int:
         nas_ls_df = pd.read_csv(nas_ls_location, sep=args.sep)[:-1]
 
         logger.info(f'Got dataframe of size: {nas_ls_df.size}')
-        make_symlink(nas_ls_df, args.path, 'symbols_nasdaq_listed', args.sep)
+        make_symlink(nas_ls_df, args.path, 'nasdaq_listed', args.sep)
         alert.info("Created nasdaq listed symlink and csv")
 
     return 0
 
 
+@log_on_failure
 def main():
     parser = ArgumentParser(description='Script to download refdata files, will maintain symlinks')
     parser.add_argument('--arca', help='arca ftp', action='store_true')
@@ -109,14 +110,9 @@ def main():
     parser.add_argument('--sep', help='nyse and nasdaq use |', default='|')
     args = parser.parse_args()
 
-    try:
-        main_impl(args)
-    except Exception as e:
-        alert.error("Something happened check log files")
-        alert.error(e)
-
-    alert.send_message(__app__)
+    main_impl(args)
 
 
 if __name__ == '__main__':
     main()
+    # alert.send_message(__app__)

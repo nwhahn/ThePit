@@ -5,6 +5,7 @@ import logging
 import os
 import pandas as pd
 import io
+import pathlib
 
 
 class DbInfo:
@@ -15,7 +16,8 @@ class DbInfo:
 
 
 class Database:
-    def __init__(self, account, config_file=f'{os.path.dirname(os.path.realpath(__file__))}/config/Database.cfg'):
+    def __init__(self, account):
+        config_file = pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / '../config/database.cfg'
         config = configparser.ConfigParser()
         config.read(config_file)
         acc = account.lower()
@@ -33,7 +35,10 @@ class Database:
                               cursor_factory=psycopg2.extras.RealDictCursor) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(sql)
-                output = cursor.fetchall()
+                if 'select' in cursor.statusmessage.lower():
+                    output = cursor.fetchall()
+                else:
+                    output = None
         if connection:
             connection.close()
 

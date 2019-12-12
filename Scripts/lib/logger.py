@@ -3,6 +3,8 @@ import os
 import getpass
 import datetime as dt
 import sys
+import functools
+import traceback
 
 
 def get_logger(logger_, application: str):
@@ -46,3 +48,19 @@ def create_logging_dir():
     log_dir = f'/home/{getpass.getuser()}/log'
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
+
+
+def log_on_failure(function):
+    """
+    Decorator that wraps the passed in function and logs the exception should one occur
+    """
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        try:
+            output = function(*args, **kwargs)
+            print(output)
+        except Exception as e:
+            logging.error(e)
+            error = traceback.format_exc()
+            logging.exception(error)
+    return wrapper
