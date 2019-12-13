@@ -51,7 +51,7 @@ def get_csv_dfs(path: str, sep: str) -> pd.DataFrame:
     nasdaq_add = pd.merge(nyse_vals, nas_trd[nasdaq_cols], 'outer', on=['CQS_Symbol'])
 
     logger.info(f"Final frame shape: {nasdaq_add.shape}")
-    alerter.info(f"Final frame shape: {nasdaq_add.shape}")
+    alerter.info(f"Total symbols today: {len(nasdaq_add)}")
 
     return nasdaq_add.rename(columns=DB_MAP)
 
@@ -82,7 +82,7 @@ def intify(input_):
 
 def gen_sql_stmts(sym_df: pd.DataFrame, curr_df: pd.DataFrame, max_val: int, schema: str, table: str) -> tuple:
     if len(sym_df) > 0:
-        old_cqs_syms = sym_df['cqssymbol'].to_list()
+        old_cqs_syms = sym_df['cqssymbol'].tolist()
     else:
         old_cqs_syms = []
     updates = []
