@@ -94,6 +94,8 @@ def insert_into_db(sym_dict: dict, db_inf: DbInfo, path) -> None:
 
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
+    alerter.info(f"Inserted {len(df)} symbols into {db_inf.schema}.{db_inf.table}")
+
 
 def iex_ohlc(args):
     db_inf = DbInfo(Database(args.db_acc), args.schema, args.table)
@@ -144,3 +146,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    alerter.send_message()
