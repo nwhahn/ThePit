@@ -13,7 +13,7 @@ def get_logger(logger_, application: str):
     fh = logging.FileHandler(f'/home/{getpass.getuser()}/log/{application}_'
                              f'{dt.datetime.now().strftime("%Y-%m-%d_%H%m")}.log')
     sh = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('(%(asctime)s) (%(funcName)-8s) [%(levelname)-5s] [%(processName)-8s]: %(message)s')
+    formatter = logging.Formatter('%(asctime)s (%(funcName)-8s) [%(levelname)-5s] [%(processName)-8s]: %(message)s')
     fh.setFormatter(formatter)
     sh.setFormatter(formatter)
 
