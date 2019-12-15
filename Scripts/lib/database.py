@@ -1,11 +1,13 @@
-import psycopg2
-import psycopg2.extras
 import configparser
 import logging
 import os
-import pandas as pd
 import io
 import pathlib
+from typing import List
+
+import pandas as pd
+import psycopg2
+import psycopg2.extras
 
 
 class DbInfo:
@@ -51,15 +53,23 @@ class Database:
                               dbname=self.db_config['DATABASE']) as connection:
             with connection.cursor() as cursor:
                 s_buf = io.StringIO()
+                print(df)
                 df.to_csv(s_buf, header=False, index=False)
                 s_buf.seek(0)
-                cursor.copy_from(s_buf, f'{schema}.{table}', sep=',')
+                cursor.copy_from(s_buf, f'{schema}.{table}', sep=',', null='')
 
         if connection:
             connection.close()
 
     def get_df(self, sql: str) -> pd.DataFrame:
         return pd.DataFrame(self.execute(sql))
+
+
+def get_columns(db_inf: DbInfo) -> List[str]:
+    query = f"SELECT column_name from information_schema.columns where table_schema = '{db_inf.schema}' and " \
+        f"table_name = '{db_inf.table}'"
+    logging.info(query)
+    return [r['column_name'] for r in db_inf.database.execute(query)]
 
 
 def get_default():
