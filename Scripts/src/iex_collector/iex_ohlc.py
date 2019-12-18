@@ -10,6 +10,7 @@ from lib.logger import get_logger, log_on_failure
 from lib.alerting import get_alerter
 from lib.fs import make_symlink
 
+__app__ = "iex_ohlc"
 logger = get_logger(__name__, 'iex_ohlc')
 alerter = get_alerter()
 
@@ -146,4 +147,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    alerter.send_message()
+    alerter.send_message(__app__)
