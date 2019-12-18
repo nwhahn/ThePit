@@ -41,7 +41,7 @@ def main_impl(args) -> int:
         logger.info('Gathering arca symbols')
         arca_df = arca_nyse_df(args.sep, arca_location)
 
-        logger.info(f'Got arca dataframe of size: {arca_df.size}')
+        logger.info(f'Got arca dataframe of size: {len(arca_df)}')
         make_symlink(arca_df, args.path, 'arca', args.sep)
         alert.info("Created arca symlink and csv")
 
@@ -49,7 +49,7 @@ def main_impl(args) -> int:
         logger.info('Gathering nyse symbols')
         nyse_df = arca_nyse_df(args.sep, nyse_location)
 
-        logger.info(f'Got nyse dataframe of size: {nyse_df.size}')
+        logger.info(f'Got nyse dataframe of size: {len(nyse_df)}')
         make_symlink(nyse_df, args.path, 'nyse', args.sep)
         alert.info("Created nyse symlink and csv")
 
@@ -57,7 +57,7 @@ def main_impl(args) -> int:
         logger.info('Gathering nasdaq traded symbols')
         nas_tr_df = nasdaq_df(args.sep, nas_tr_location)[:-1]
 
-        logger.info(f'Got nasdaq traded dataframe of size: {nas_tr_df.size}')
+        logger.info(f'Got nasdaq traded dataframe of size: {len(nas_tr_df)}')
         make_symlink(nas_tr_df, args.path, 'nasdaq_traded', args.sep)
         alert.info("Created nasdaq trade symlink and csv")
 
@@ -65,7 +65,7 @@ def main_impl(args) -> int:
         logger.info('Gathering nasdaq listed symbols')
         nas_ls_df = pd.read_csv(nas_ls_location, sep=args.sep)[:-1]
 
-        logger.info(f'Got nasdaq listed dataframe of size: {nas_ls_df.size}')
+        logger.info(f'Got nasdaq listed dataframe of size: {len(nas_ls_df)}')
         make_symlink(nas_ls_df, args.path, 'nasdaq_listed', args.sep)
         alert.info("Created nasdaq listed symlink and csv")
 
