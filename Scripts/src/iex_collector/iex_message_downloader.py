@@ -78,8 +78,9 @@ def ohlc_request(syms: List[str], token: str, message: str) -> Tuple[dict, List[
 
     for k, v in iex_json.items():
         temp = v[message]
-        temp['symbol'] = k
-        sym_dict[k] = temp
+        if temp is not None:
+            temp['symbol'] = k
+            sym_dict[k] = temp
 
     missing_syms = set(syms) - set(sym_dict.keys())
 

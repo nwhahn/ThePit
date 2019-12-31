@@ -15,15 +15,34 @@ logger = get_logger(__name__, __app__)
 alerter = get_alerter()
 
 
+def initify_cols(df: pd.DataFrame, db_inf: DbInfo) -> pd.DataFrame:
+    query = f"SELECT column_name, data_type from information_schema.columns where table_schema = '{db_inf.schema}' " \
+            f"and table_name = '{db_inf.table}'"
+    cols = db_inf.database.execute(query)
+
+    for col in cols:
+        if col['data_type'] == 'integer':
+            logger.info(f"Filling {col} nulls with zeros and converting to int")
+            df[col['column_name']] = df[col['column_name']].fillna(0)
+            df[col['column_name']] = df[col['column_name']].astype(int)
+
+    return df
+
+
 def inst_df(db_inf: DbInfo, message: str, path: str) -> None:
-    df = pd.read_csv(f"{path}/iex_{message}.csv", index_col=0, sep="|")
+    df = pd.read_csv(f"{path}/iex_{message}.csv", sep="|", index_col=0)
     df.columns = map(str.lower, df.columns)
     logger.info(df.columns)
 
     cols = get_columns(db_inf)
-    logger.info(f"Writing out columns from db in order: {cols}")
+    logger.info(cols)
+    logger.info(sorted(list(df.columns)))
 
     df = df[cols]
+
+    logger.info(df.columns)
+
+    df = initify_cols(df, db_inf)
 
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
