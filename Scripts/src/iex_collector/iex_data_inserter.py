@@ -66,4 +66,4 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # alerter.send_message(__app__)
+    alerter.send_message(__app__)
