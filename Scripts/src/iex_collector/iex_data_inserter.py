@@ -3,6 +3,7 @@ Small script that takes the iex csv output and dumps to the database
 """
 
 from argparse import ArgumentParser
+import datetime as dt
 
 import pandas as pd
 
@@ -21,7 +22,7 @@ def initify_cols(df: pd.DataFrame, db_inf: DbInfo) -> pd.DataFrame:
     cols = db_inf.database.execute(query)
 
     for col in cols:
-        if col['data_type'] == 'integer':
+        if col['data_type'] in ('smallint', 'integer', 'bigint'):  # postgres int types
             logger.info(f"Filling {col} nulls with zeros and converting to int")
             df[col['column_name']] = df[col['column_name']].fillna(0)
             df[col['column_name']] = df[col['column_name']].astype(int)
@@ -29,7 +30,19 @@ def initify_cols(df: pd.DataFrame, db_inf: DbInfo) -> pd.DataFrame:
     return df
 
 
-def inst_df(db_inf: DbInfo, message: str, path: str) -> None:
+def dateify(df: pd.DataFrame, date_val: str) -> pd.DataFrame:
+    some_date = 0
+    for date_name in ('date', 'tradedate'):
+        if date_name in df.columns.values:
+            some_date += 1
+
+    if not some_date:
+        df['date'] = date_val
+
+    return df
+
+
+def inst_df(db_inf: DbInfo, message: str, path: str, date_val: str) -> None:
     df = pd.read_csv(f"{path}/iex_{message}.csv", sep="|", index_col=0)
     df.columns = map(str.lower, df.columns)
     logger.info(df.columns)
@@ -38,11 +51,13 @@ def inst_df(db_inf: DbInfo, message: str, path: str) -> None:
     logger.info(cols)
     logger.info(sorted(list(df.columns)))
 
-    df = df[cols]
-
     logger.info(df.columns)
 
     df = initify_cols(df, db_inf)
+
+    df = dateify(df, date_val)
+
+    df = df[cols]
 
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
@@ -51,17 +66,20 @@ def inst_df(db_inf: DbInfo, message: str, path: str) -> None:
 
 @log_on_failure
 def main():
+    today = dt.date.today()
+
     parser = ArgumentParser(description="Dump csvs into the database")
     parser.add_argument('--path', help='path to the csv file', required=True)
     parser.add_argument('--message', help='message type to use', required=True)
     parser.add_argument('--schema', help='schema to insert into', required=True)
     parser.add_argument('--table', help='table to insert into', required=True)
     parser.add_argument('--db-acc', help='database account', required=True)
+    parser.add_argument('--date', help='date as a string if there isnt a date already in the columns', default=today)
     args = parser.parse_args()
 
     db_inf = DbInfo(Database(args.db_acc), args.schema, args.table)
 
-    inst_df(db_inf, args.message, args.path)
+    inst_df(db_inf, args.message, args.path, args.date)
 
 
 if __name__ == '__main__':
