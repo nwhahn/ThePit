@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./common"
+	"./lib"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -80,7 +80,7 @@ func insertData (bpi *BpiTotalStruct, db *sql.DB, datetime string) {
 
 func main () {
 
-	common.SetupLogging("BPIScraper")
+	lib.SetupLogging("BPIScraper")
 
 	parser := argparse.NewParser("BPIScraper", "Continually scraps the bpi index for bitcoin pricing data every minute")
 

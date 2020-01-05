@@ -6,6 +6,8 @@ import sys
 import functools
 import traceback
 
+import lib.alerting
+
 
 def get_logger(logger_, application: str):
     create_logging_dir()
@@ -64,3 +66,29 @@ def log_on_failure(function):
             error = traceback.format_exc()
             logging.exception(error)
     return wrapper
+
+
+def app_main(function, logger, alerter: lib.alerting.Alert = None):
+    """
+    TODO should this be in a different module?
+    Decorator to replace log on failure, wrap the main and this will log and alert, this also calls sys.exit so there
+    is no need to put that at the bottom of scripts, this is the method that will call the final alerting as well
+    """
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        try:
+            output = function(*args, **kwargs)
+            logger.info(output)
+            return 0
+        except Exception as e:
+            logger.error(e)
+            error = traceback.format_exc()
+            logger.exception(error)
+            if alerter is not None:
+                alerter.error("Error in script")
+                alerter.error(error)
+                alerter.send_message()
+            return 1
+
+    sys.exit(wrapper)

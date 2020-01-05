@@ -1,5 +1,6 @@
 import requests
 from enum import Enum
+import logging
 
 
 class Alert(Enum):
@@ -41,7 +42,7 @@ class Alerting:
 
         post_message = {'bot_id': '888bb6b4dd3bbd5e6e6304db5f', 'text': f'{application}:\n{self.__str__()}',
                         'attachments': [{'type': 'image', 'url': f'{alert_color}'}]}
-        print(post_message)
+        logging.info(post_message)
 
         _ = requests.post('https://api.groupme.com/v3/bots/post', data=post_message)
 
@@ -49,6 +50,8 @@ class Alerting:
         alert_str = f"Alerting level: {groupme_annoyance_mapper[self.alert_level]}\n"
         for k, v in self.alert_dict.items():
             alert_str += f"{v}: {k}\n"
+        if self.alert_level == Alert.ERROR:
+            alert_str = f":X::X::X:\n{alert_str}:X::X::X:"
         return alert_str
 
 
