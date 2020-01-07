@@ -11,7 +11,7 @@ import requests
 import pandas as pd
 
 from lib.database import Database, DbInfo
-from lib.logger import get_logger, log_on_failure
+from lib.logger import get_logger, app_main
 from lib.alerting import get_alerter
 from lib.fs import make_symlink
 
@@ -116,7 +116,7 @@ def iex_ohlc(args):
     alerter.info(f"Number of missing symbols: {len(failed_syms)}")
 
 
-@log_on_failure
+@app_main(logger, alerter, __app__)
 def main():
     # TODO add yaml support and config, this is too many argparse variables
     parser = ArgumentParser(description="Download ohlc for yesterday")
@@ -136,4 +136,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    alerter.send_message(__app__)

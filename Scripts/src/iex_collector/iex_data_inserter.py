@@ -8,7 +8,7 @@ import datetime as dt
 import pandas as pd
 
 from lib.alerting import get_alerter
-from lib.logger import get_logger, log_on_failure
+from lib.logger import get_logger, app_main
 from lib.database import Database, DbInfo, get_columns
 
 __app__ = "iex_data_inserter"
@@ -64,7 +64,7 @@ def inst_df(db_inf: DbInfo, message: str, path: str, date_val: str) -> None:
     alerter.info(f"Inserted {len(df)} rows into {db_inf.schema}.{db_inf.table}")
 
 
-@log_on_failure
+@app_main(logger, alerter, __app__)
 def main():
     today = dt.date.today()
 
@@ -84,4 +84,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    alerter.send_message(__app__)

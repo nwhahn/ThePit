@@ -68,27 +68,28 @@ def log_on_failure(function):
     return wrapper
 
 
-def app_main(function, logger, alerter: lib.alerting.Alert = None):
+def app_main(logger, alerter: lib.alerting.Alert = None, app: str = "default app"):
     """
     TODO should this be in a different module?
-    Decorator to replace log on failure, wrap the main and this will log and alert, this also calls sys.exit so there
-    is no need to put that at the bottom of scripts, this is the method that will call the final alerting as well
+    Decorator to replace log on failure, wrap the main and this will log and alert, this is the function that will call
+    the final alerting as well
     """
-
-    @functools.wraps(function)
-    def wrapper(*args, **kwargs):
-        try:
-            output = function(*args, **kwargs)
-            logger.info(output)
-            return 0
-        except Exception as e:
-            logger.error(e)
-            error = traceback.format_exc()
-            logger.exception(error)
+    def wrap(f):
+        def wrapper(*args, **kwargs):
+            try:
+                output = f(*args, **kwargs)
+                logger.info(output)
+                return_code = 0
+            except Exception as e:
+                logger.error(e)
+                error = traceback.format_exc()
+                logger.exception(error)
+                if alerter is not None:
+                    alerter.error("Error in script")
+                    alerter.error(error)
+                return_code = 1
             if alerter is not None:
-                alerter.error("Error in script")
-                alerter.error(error)
-                alerter.send_message()
-            return 1
-
-    sys.exit(wrapper)
+                alerter.send_message(app)
+            return return_code
+        return wrapper
+    return wrap

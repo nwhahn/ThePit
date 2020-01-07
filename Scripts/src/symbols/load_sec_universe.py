@@ -1,6 +1,6 @@
 import pandas as pd
 from argparse import ArgumentParser
-from lib.logger import get_logger, log_on_failure
+from lib.logger import get_logger, app_main
 from lib.database import Database, DbInfo
 from lib.alerting import get_alerter
 import datetime as dt
@@ -140,7 +140,7 @@ def main_impl(args):
     alerter.info(f"Successfully inserted {inserts_len} symbols into database")
 
 
-@log_on_failure
+@app_main(logger, alerter, __app__)
 def main():
     parser = ArgumentParser(description="This script will read in the files and "
                                         "append them 'correctly' to the database")
@@ -156,4 +156,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    alerter.send_message(__app__)
