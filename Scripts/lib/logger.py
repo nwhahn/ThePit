@@ -68,7 +68,7 @@ def log_on_failure(function):
     return wrapper
 
 
-def app_main(logger, alerter: lib.alerting.Alert = None):
+def app_main(logger, alerter: lib.alerting.Alert = None, app: str = "default app"):
     """
     TODO should this be in a different module?
     Decorator to replace log on failure, wrap the main and this will log and alert, this is the function that will call
@@ -79,7 +79,7 @@ def app_main(logger, alerter: lib.alerting.Alert = None):
             try:
                 output = f(*args, **kwargs)
                 logger.info(output)
-                return_code =0
+                return_code = 0
             except Exception as e:
                 logger.error(e)
                 error = traceback.format_exc()
@@ -89,7 +89,7 @@ def app_main(logger, alerter: lib.alerting.Alert = None):
                     alerter.error(error)
                 return_code = 1
             if alerter is not None:
-                alerter.send_message()
+                alerter.send_message(app)
             return return_code
         return wrapper
     return wrap
