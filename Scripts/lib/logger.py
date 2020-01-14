@@ -7,6 +7,7 @@ import functools
 import traceback
 
 import lib.alerting
+from lib.config_parser import ConfigNode
 
 
 def get_logger(logger_, application: str):
@@ -66,6 +67,24 @@ def log_on_failure(function):
             error = traceback.format_exc()
             logging.exception(error)
     return wrapper
+
+
+def log_config(config_node: ConfigNode) -> None:
+    def log_dict(config_dict: dict, recurse_num: int = 0):
+        for key, value in config_dict.items():
+            if isinstance(value, dict):
+                recurse_num += 1
+                log_dict(value, recurse_num)
+            else:
+                logging.info(f"{' ' * (recurse_num * 2)}[{key}]")
+                logging.info(f"{' ' * (recurse_num * 3)}{value}")
+
+    for k, v in config_node.items():
+        if isinstance(v, dict):
+            log_dict(v, 0)
+        else:
+            logging.info(f'[{k}]')
+            logging.info(f"{' ' * 2}{v}")
 
 
 def app_main(logger, alerter: lib.alerting.Alert = None, app: str = "default app"):

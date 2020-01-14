@@ -65,26 +65,35 @@ def gen_jobs(syms: dict, syms_per_job: int) -> List[List[str]]:
     return comb_out
 
 
-def ohlc_request(syms: List[str], token: str, message: str) -> Tuple[dict, List[str]]:
+def ohlc_request(syms: List[str], token: str, message: str, date_range: str = None) -> Tuple[List[dict], List[str]]:
 
     logger.info(syms)
     symbols = ','.join(syms)
-    url = requests.get(IEX_REQUEST.format(symbols, message, token))
+    if date_range is None:
+        url = requests.get(IEX_REQUEST.format(symbols, message, token))
+    else:
+        range_str = f"{IEX_REQUEST.format(symbols, message, token)}&range={date_range}"
+        url = requests.get(range_str)
     logger.info(f"{url.url}")
     logger.info(f"status code: {url.status_code}")
 
-    sym_dict = {}
+    sym_list = []
     iex_json = url.json()
 
     for k, v in iex_json.items():
         temp = v[message]
         if temp is not None:
-            temp['symbol'] = k
-            sym_dict[k] = temp
+            if isinstance(temp, list):
+                for t in temp:
+                    t['symbol'] = k
+                    sym_list.append(t)
+            else:
+                temp['symbol'] = k
+                sym_list.append(temp)
 
-    missing_syms = set(syms) - set(sym_dict.keys())
+    missing_syms = set(syms) - set([r['symbol'] for r in sym_list])
 
-    return sym_dict, list(missing_syms)
+    return sym_list, list(missing_syms)
 
 
 def iex_ohlc(args):
@@ -98,21 +107,20 @@ def iex_ohlc(args):
 
     jobs = gen_jobs(syms, args.syms_per_job)
 
-    total_sym_dict = {}
-    failed_syms = []
+    total_sym_list, failed_syms = [], []
     for j in jobs:
-        sym_dict, missing_syms = ohlc_request(j, args.token, args.message)
-        total_sym_dict.update(sym_dict)
+        sym_list, missing_syms = ohlc_request(j, args.token, args.message, args.range)
+        total_sym_list.extend(sym_list)
         failed_syms.extend(missing_syms)
 
-    df = pd.DataFrame.from_dict(total_sym_dict).transpose()
+    df = pd.DataFrame(total_sym_list)
     df['symbolid'] = df['symbol'].map(syms)
 
     make_symlink(df, args.outpath, f'iex_{args.message}', '|')
 
     logger.info(f"All missing symbols: {failed_syms}")
 
-    alerter.info(f"Number of symbols gathered: {len(total_sym_dict)}")
+    alerter.info(f"Number of symbols gathered: {len(total_sym_list)}")
     alerter.info(f"Number of missing symbols: {len(failed_syms)}")
 
 
@@ -129,6 +137,7 @@ def main():
     parser.add_argument('--outpath', help='path to save the backup csv to', required=True)
     parser.add_argument('--symbols', help='use specific symbols possibly to test')
     parser.add_argument('--message', help='specific message to download')
+    parser.add_argument('--range', help='specify a range for things like looking up dividends')
     args = parser.parse_args()
 
     iex_ohlc(args)

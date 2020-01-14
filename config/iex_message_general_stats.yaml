@@ -1,0 +1,11 @@
+importing:  # this will be how imports are done through this, uses relative imports
+  database: database.yaml
+
+iex_messaging:
+  syms_per_job:
+  db_acc: stockbois_writer
+  schema: stockbois
+  table: generalstats
+  ref_table: security_index
+  outpath: /home/pi/iex_ohlc
+  message: stats
