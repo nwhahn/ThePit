@@ -12,6 +12,8 @@ import sys
 import logging
 import pathlib
 
+from lib.logger import log_config
+
 
 # TODO is this necessary ?
 class ConfigNode(dict):
@@ -54,6 +56,8 @@ def config_argparse(parser: argparse.ArgumentParser) -> ConfigNode:
 
     config_node = ConfigNode(config)
     map_config_overrides(unkown_args, config_node)
+
+    log_config(config_node)
 
     return ConfigNode(config)
 

@@ -14,10 +14,11 @@ from lib.database import Database, DbInfo
 from lib.logger import get_logger, app_main
 from lib.alerting import get_alerter
 from lib.fs import make_symlink
+import lib.config_parser as config_parser
 
 __app__ = "iex_downloader"
-logger = get_logger(__name__, __app__)
-alerter = get_alerter()
+logger = get_logger(__app__)
+alerter = get_alerter(__app__)
 
 IEX_REQUEST = 'https://cloud.iexapis.com/stable/stock/market/batch?symbols={}&types={}&token={}'
 
@@ -77,6 +78,8 @@ def ohlc_request(syms: List[str], token: str, message: str, date_range: str = No
     logger.info(f"{url.url}")
     logger.info(f"status code: {url.status_code}")
 
+    if url.status_code != 200:
+        return [{} for _ in syms], syms
     sym_list = []
     iex_json = url.json()
 
@@ -96,7 +99,7 @@ def ohlc_request(syms: List[str], token: str, message: str, date_range: str = No
     return sym_list, list(missing_syms)
 
 
-def iex_ohlc(args):
+def iex_ohlc(config: config_parser.ConfigNode):
     db_inf = DbInfo(Database(args.db_acc), args.schema, args.table)
 
     if args.symbols is None:
@@ -124,23 +127,16 @@ def iex_ohlc(args):
     alerter.info(f"Number of missing symbols: {len(failed_syms)}")
 
 
-@app_main(logger, alerter, __app__)
+@app_main(logger, alerter)
 def main():
     # TODO add yaml support and config, this is too many argparse variables
     parser = ArgumentParser(description="Download ohlc for yesterday")
     parser.add_argument('--token', help='iex token, dont save to git ;)', required=True)
-    parser.add_argument('--syms-per-job', help='number of syms per batch lookup', type=int, default=100)
-    parser.add_argument('--db-acc', help='database account', required=True)
-    parser.add_argument('--schema', help='schema for the table to write to', default='stockbois')
-    parser.add_argument('--table', help='table where the ohlc data is written to', required=True)
-    parser.add_argument('--ref-table', help='reference table to lookup symbols for', required=True)
-    parser.add_argument('--outpath', help='path to save the backup csv to', required=True)
     parser.add_argument('--symbols', help='use specific symbols possibly to test')
-    parser.add_argument('--message', help='specific message to download')
     parser.add_argument('--range', help='specify a range for things like looking up dividends')
-    args = parser.parse_args()
+    config = config_parser.config_argparse(parser)
 
-    iex_ohlc(args)
+    iex_ohlc(config)
 
 
 if __name__ == '__main__':

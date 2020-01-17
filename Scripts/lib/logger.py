@@ -10,17 +10,20 @@ import lib.alerting
 from lib.config_parser import ConfigNode
 
 
-def get_logger(logger_, application: str):
+def get_logger(application: str):
     create_logging_dir()
 
     fh = logging.FileHandler(f'/home/{getpass.getuser()}/log/{application}_'
                              f'{dt.datetime.now().strftime("%Y-%m-%d_%H%m")}.log')
     sh = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s (%(funcName)-8s) [%(levelname)-5s] [%(processName)-8s]: %(message)s')
+    formatter = logging.Formatter('%(asctime)s ((funcName)-5s) [%(levelname)-5s] [%(processName)-8s]: %(message)s')
     fh.setFormatter(formatter)
     sh.setFormatter(formatter)
 
-    logger = logging.getLogger(logger_)
+    fh.setLevel(logging.INFO)
+    sh.setLevel(logging.INFO)
+
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
     logger.addHandler(sh)
@@ -70,24 +73,22 @@ def log_on_failure(function):
 
 
 def log_config(config_node: ConfigNode) -> None:
-    def log_dict(config_dict: dict, recurse_num: int = 0):
+    def log_dict(config_dict: dict, recurse_num):
         for key, value in config_dict.items():
             if isinstance(value, dict):
-                recurse_num += 1
-                log_dict(value, recurse_num)
+                logging.info(f"{' ' * recurse_num * 2}[{key}]")
+                log_dict(value, recurse_num + 1)
             else:
-                logging.info(f"{' ' * (recurse_num * 2)}[{key}]")
-                logging.info(f"{' ' * (recurse_num * 3)}{value}")
-
+                logging.info(f"{' ' * (recurse_num * 3)}{key} = {value}")
     for k, v in config_node.items():
         if isinstance(v, dict):
-            log_dict(v, 0)
+            logging.info(f"[{k}]")
+            log_dict(v, 1)
         else:
-            logging.info(f'[{k}]')
-            logging.info(f"{' ' * 2}{v}")
+            logging.info(f"{' ' * 2}{k} = {v}")
 
 
-def app_main(logger, alerter: lib.alerting.Alert = None, app: str = "default app"):
+def app_main(logger, alerter: lib.alerting.Alert = None):
     """
     TODO should this be in a different module?
     Decorator to replace log on failure, wrap the main and this will log and alert, this is the function that will call

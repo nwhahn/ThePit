@@ -1,4 +1,3 @@
-import configparser
 import logging
 import os
 import io
@@ -9,6 +8,8 @@ import pandas as pd
 import psycopg2
 import psycopg2.extras
 
+from lib.config_parser import ConfigNode
+
 
 class DbInfo:
     def __init__(self, database, schema, table):
@@ -18,22 +19,17 @@ class DbInfo:
 
 
 class Database:
-    def __init__(self, account):
-        config_file = pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / '../config/database.cfg'
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        acc = account.lower()
-        logging.info(config[acc])
-        self.db_config = config[acc]
+    def __init__(self, config: ConfigNode, account: str):
+        self.db_config = config[account]
 
     def execute(self, sql: str) -> list:
         """This function is not good for large queries"""
         logging.info(sql)
 
-        with psycopg2.connect(host=self.db_config['HOST'],
-                              user=self.db_config['USER'],
-                              password=self.db_config['PASSWORD'],
-                              dbname=self.db_config['DATABASE'],
+        with psycopg2.connect(host=self.db_config['host'],
+                              user=self.db_config['user'],
+                              password=self.db_config['password'],
+                              dbname=self.db_config['database'],
                               cursor_factory=psycopg2.extras.RealDictCursor) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(sql)
@@ -47,10 +43,10 @@ class Database:
         return output
 
     def copy(self, df: pd.DataFrame, schema: str, table: str, *args, **kwargs) -> None:
-        with psycopg2.connect(host=self.db_config['HOST'],
-                              user=self.db_config['USER'],
-                              password=self.db_config['PASSWORD'],
-                              dbname=self.db_config['DATABASE']) as connection:
+        with psycopg2.connect(host=self.db_config['host'],
+                              user=self.db_config['user'],
+                              password=self.db_config['password'],
+                              dbname=self.db_config['database']) as connection:
             with connection.cursor() as cursor:
                 s_buf = io.StringIO()
                 logging.info(df)

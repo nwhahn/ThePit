@@ -2,7 +2,7 @@ importing:  # this will be how imports are done through this, uses relative impo
   database: database.yaml
 
 iex_messaging:
-  syms_per_job:
+  syms_per_job: 100
   db_acc: stockbois_writer
   schema: stockbois
   table: generalstats
