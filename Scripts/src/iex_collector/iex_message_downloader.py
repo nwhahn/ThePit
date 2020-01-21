@@ -10,7 +10,7 @@ from typing import List, Tuple
 import requests
 import pandas as pd
 
-from lib.database import Database, DbInfo
+import lib.database as database
 from lib.logger import get_logger, app_main
 from lib.alerting import get_alerter
 from lib.fs import make_symlink
@@ -23,14 +23,14 @@ alerter = get_alerter(__app__)
 IEX_REQUEST = 'https://cloud.iexapis.com/stable/stock/market/batch?symbols={}&types={}&token={}'
 
 
-def db_syms(db_inf: DbInfo, table: str) -> dict:
+def db_syms(db_inf: database.DbInfo, table: str) -> dict:
     """return dictionary of symbol to symbolid mapping"""
     output = db_inf.database.execute(f"select symbolid, nasdaqsymbol as symbol from {db_inf.schema}.{table} "
                                      f"where nasdaqsymbol is not null")
     return {row['symbol']: row['symbolid'] for row in output}
 
 
-def dry_run_map(syms: List[str], db_inf: DbInfo, table: str) -> dict:
+def dry_run_map(syms: List[str], db_inf: database.DbInfo, table: str) -> dict:
     symbols = ",".join(f"'{s.upper()}'" for s in syms)
     logger.info(f"Checking for symbols: {symbols}")
 
@@ -100,26 +100,31 @@ def ohlc_request(syms: List[str], token: str, message: str, date_range: str = No
 
 
 def iex_ohlc(config: config_parser.ConfigNode):
-    db_inf = DbInfo(Database(args.db_acc), args.schema, args.table)
 
-    if args.symbols is None:
-        syms = db_syms(db_inf, args.ref_table)
+    db_inf = database.DbInfo(database.create_connection(config, config['iex_messaging.db_acc']),
+                             config['iex_messaging.schema'], config['iex_messaging.table'])
+
+    ref_table = config['iex_messaging.ref_table']
+
+    if 'args.symbols' not in config:
+        syms = db_syms(db_inf, ref_table)
     else:
-        arg_syms = args.symbols.split(',')
-        syms = dry_run_map(arg_syms, db_inf, args.ref_table)
+        arg_syms = config['args.symbols'].replace(' ', '').split(',')
+        syms = dry_run_map(arg_syms, db_inf, ref_table)
 
-    jobs = gen_jobs(syms, args.syms_per_job)
+    jobs = gen_jobs(syms, config['iex_messaging.syms_per_job'])
 
     total_sym_list, failed_syms = [], []
     for j in jobs:
-        sym_list, missing_syms = ohlc_request(j, args.token, args.message, args.range)
+        sym_list, missing_syms = ohlc_request(j, config['args.token'], config['iex_messaging.message'],
+                                              config['args.range'])
         total_sym_list.extend(sym_list)
         failed_syms.extend(missing_syms)
 
     df = pd.DataFrame(total_sym_list)
     df['symbolid'] = df['symbol'].map(syms)
 
-    make_symlink(df, args.outpath, f'iex_{args.message}', '|')
+    make_symlink(df, config['iex_messaging.outpath'], f'iex_{config["iex_messaging.message"]}', '|')
 
     logger.info(f"All missing symbols: {failed_syms}")
 
@@ -127,7 +132,7 @@ def iex_ohlc(config: config_parser.ConfigNode):
     alerter.info(f"Number of missing symbols: {len(failed_syms)}")
 
 
-@app_main(logger, alerter)
+@app_main(logger)
 def main():
     # TODO add yaml support and config, this is too many argparse variables
     parser = ArgumentParser(description="Download ohlc for yesterday")

@@ -1,0 +1,11 @@
+importing:  # this will be how imports are done through this, uses relative imports
+  database: ../database.yaml
+
+iex_messaging:
+  syms_per_job: 100
+  db_acc      : stockbois_writer
+  schema      : stockbois
+  table       : dividends
+  ref_table   : security_index
+  outpath     : /home/jackh
+  message     : dividends

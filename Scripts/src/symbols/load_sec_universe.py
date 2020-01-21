@@ -1,13 +1,16 @@
-import pandas as pd
+import datetime as dt
 from argparse import ArgumentParser
+
+import pandas as pd
+
 from lib.logger import get_logger, app_main
 from lib.database import Database, DbInfo
 from lib.alerting import get_alerter
-import datetime as dt
+import lib.config_parser as config_parser
 
 __app__ = 'load_sec_universe'
-logger = get_logger(__name__, __app__)
-alerter = get_alerter()
+logger = get_logger(__app__)
+alerter = get_alerter(__app__)
 
 DB_MAP = {'Symbol_x': 'SYMBOLNYSE', 'CQS_Symbol': 'CQSSYMBOL', 'SymbolIndexNumber': 'SYMBOLINDEXNUMBER',
           'Symbol_y': 'NASDAQSYMBOL'}
@@ -111,11 +114,11 @@ def gen_sql_stmts(sym_df: pd.DataFrame, curr_df: pd.DataFrame, max_val: int, sch
     return updates, inserts
 
 
-def main_impl(args):
-    db_info = DbInfo(Database(args.database), args.schema, args.table)
+def main_impl(config: config_parser.ConfigNode):
+    db_info = DbInfo(Database(config, config['sec_univ.db_acc']), config['sec_univ.schema'], config['sec_univ.table'])
 
     sym_df = get_symbols(db_info)
-    curr_df = get_csv_dfs(args.path, args.sep)
+    curr_df = get_csv_dfs(config['sec_univ.path'], config['sec_univ.sep'])
 
     max_val = max_value(db_info)
 
@@ -140,18 +143,13 @@ def main_impl(args):
     alerter.info(f"Successfully inserted {inserts_len} symbols into database")
 
 
-@app_main(logger, alerter, __app__)
+@app_main(logger, alerter)
 def main():
     parser = ArgumentParser(description="This script will read in the files and "
                                         "append them 'correctly' to the database")
-    parser.add_argument('--database', help='database account to use', required=True)
-    parser.add_argument('--schema', help='Schema where the securities are', default='stockbois')
-    parser.add_argument('--table', help='name of the table', default='security_index')
-    parser.add_argument('--path', help='path to all the csv files', default='/tmp')
-    parser.add_argument('--sep', help='csv separator', default='|')
-    args = parser.parse_args()
+    config = config_parser.config_argparse(parser)
 
-    main_impl(args)
+    main_impl(config)
 
 
 if __name__ == '__main__':

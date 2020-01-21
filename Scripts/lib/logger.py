@@ -7,7 +7,6 @@ import functools
 import traceback
 
 import lib.alerting
-from lib.config_parser import ConfigNode
 
 
 def get_logger(application: str):
@@ -16,7 +15,8 @@ def get_logger(application: str):
     fh = logging.FileHandler(f'/home/{getpass.getuser()}/log/{application}_'
                              f'{dt.datetime.now().strftime("%Y-%m-%d_%H%m")}.log')
     sh = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter('%(asctime)s ((funcName)-5s) [%(levelname)-5s] [%(processName)-8s]: %(message)s')
+    formatter = logging.Formatter('%(asctime)s (%(funcName)-10.10s) [%(levelname)-5.5s] [%(processName)-8s]: '
+                                  '%(message)s')
     fh.setFormatter(formatter)
     sh.setFormatter(formatter)
 
@@ -72,22 +72,6 @@ def log_on_failure(function):
     return wrapper
 
 
-def log_config(config_node: ConfigNode) -> None:
-    def log_dict(config_dict: dict, recurse_num):
-        for key, value in config_dict.items():
-            if isinstance(value, dict):
-                logging.info(f"{' ' * recurse_num * 2}[{key}]")
-                log_dict(value, recurse_num + 1)
-            else:
-                logging.info(f"{' ' * (recurse_num * 3)}{key} = {value}")
-    for k, v in config_node.items():
-        if isinstance(v, dict):
-            logging.info(f"[{k}]")
-            log_dict(v, 1)
-        else:
-            logging.info(f"{' ' * 2}{k} = {v}")
-
-
 def app_main(logger, alerter: lib.alerting.Alert = None):
     """
     TODO should this be in a different module?
@@ -109,7 +93,7 @@ def app_main(logger, alerter: lib.alerting.Alert = None):
                     alerter.error(error)
                 return_code = 1
             if alerter is not None:
-                alerter.send_message(app)
+                alerter.send_message()
             return return_code
         return wrapper
     return wrap

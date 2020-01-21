@@ -1,0 +1,9 @@
+importing:  # this will be how imports are done through this, uses relative imports
+  database: ../database.yaml
+
+sec_univ:
+  db_acc : stockbois_writer
+  schema : stockbois
+  table  : security_index
+  path   : /home/pi/symbol_mapping
+  sep    : |

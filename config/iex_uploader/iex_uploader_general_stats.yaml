@@ -1,0 +1,9 @@
+importing:  # this will be how imports are done through this, uses relative imports
+  database: database.yaml
+
+iex_uploader:
+  path    : /home/pi/iex_ohlc
+  message : stats
+  schema  : stockbois
+  table   : generalstats
+  db_acc  : stockbois_writer

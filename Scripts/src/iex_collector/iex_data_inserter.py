@@ -10,10 +10,11 @@ import pandas as pd
 from lib.alerting import get_alerter
 from lib.logger import get_logger, app_main
 from lib.database import Database, DbInfo, get_columns
+import lib.config_parser as config_parser
 
 __app__ = "iex_data_inserter"
-logger = get_logger(__name__, __app__)
-alerter = get_alerter()
+logger = get_logger(__app__)
+alerter = get_alerter(__app__)
 
 
 def initify_cols(df: pd.DataFrame, db_inf: DbInfo) -> pd.DataFrame:
@@ -42,8 +43,11 @@ def dateify(df: pd.DataFrame, date_val: str) -> pd.DataFrame:
     return df
 
 
-def inst_df(db_inf: DbInfo, message: str, path: str, date_val: str) -> None:
-    df = pd.read_csv(f"{path}/iex_{message}.csv", sep="|", index_col=0)
+def inst_df(config: config_parser.ConfigNode) -> None:
+    db_inf = DbInfo(Database(config, config['iex_uploader.db_acc']), config['iex_uploader.schema'],
+                    config['iex_uploader.table'])
+
+    df = pd.read_csv(f"{config['iex_uploader.path']}/iex_{config['iex_uploader.message']}.csv", sep="|", index_col=0)
     df.columns = map(str.lower, df.columns)
     logger.info(df.columns)
 
@@ -55,31 +59,21 @@ def inst_df(db_inf: DbInfo, message: str, path: str, date_val: str) -> None:
 
     df = initify_cols(df, db_inf)
 
-    df = dateify(df, date_val)
+    df = dateify(df, config['args.date'])
 
     df = df[cols]
 
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
-    alerter.info(f"Inserted {len(df)} rows into {db_inf.schema}.{db_inf.table}")
 
-
-@app_main(logger, alerter, __app__)
+@app_main(logger, alerter)
 def main():
     today = dt.date.today()
-
     parser = ArgumentParser(description="Dump csvs into the database")
-    parser.add_argument('--path', help='path to the csv file', required=True)
-    parser.add_argument('--message', help='message type to use', required=True)
-    parser.add_argument('--schema', help='schema to insert into', required=True)
-    parser.add_argument('--table', help='table to insert into', required=True)
-    parser.add_argument('--db-acc', help='database account', required=True)
     parser.add_argument('--date', help='date as a string if there isnt a date already in the columns', default=today)
-    args = parser.parse_args()
+    config = config_parser.config_argparse(parser)
 
-    db_inf = DbInfo(Database(args.db_acc), args.schema, args.table)
-
-    inst_df(db_inf, args.message, args.path, args.date)
+    inst_df(config)
 
 
 if __name__ == '__main__':
