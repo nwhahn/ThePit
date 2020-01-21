@@ -7,5 +7,5 @@ iex_messaging:
   schema      : stockbois
   table       : dividends
   ref_table   : security_index
-  outpath     : /home/jackh
+  outpath     : /home/pi/iex_ohlc
   message     : dividends

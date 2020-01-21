@@ -134,7 +134,6 @@ def iex_ohlc(config: config_parser.ConfigNode):
 
 @app_main(logger)
 def main():
-    # TODO add yaml support and config, this is too many argparse variables
     parser = ArgumentParser(description="Download ohlc for yesterday")
     parser.add_argument('--token', help='iex token, dont save to git ;)', required=True)
     parser.add_argument('--symbols', help='use specific symbols possibly to test')

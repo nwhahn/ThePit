@@ -2,7 +2,7 @@ importing:  # this will be how imports are done through this, uses relative impo
   database: ../database.yaml
 
 iex_uploader:
-  path    : /home/jackh
+  path    : /home/pi/iex_ohlc
   message : dividends
   schema  : stockbois
   table   : dividends
