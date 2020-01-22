@@ -106,7 +106,7 @@ def iex_ohlc(config: config_parser.ConfigNode):
 
     ref_table = config['iex_messaging.ref_table']
 
-    if 'args.symbols' not in config:
+    if config['args.symbols'] is None:
         syms = db_syms(db_inf, ref_table)
     else:
         arg_syms = config['args.symbols'].replace(' ', '').split(',')
