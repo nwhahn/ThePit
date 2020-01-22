@@ -44,7 +44,7 @@ class Alerting:
         else:
             alert_color = "https://i.groupme.com/600x446.png.44de5706526a41a0ae3038e7714bbcce"
 
-        post_message = {'bot_id': 'ac960a6f08227f9b603e8d8859', 'text': f'{self.name}:\n{self.__str__()}',
+        post_message = {'bot_id': '888bb6b4dd3bbd5e6e6304db5f', 'text': f'{self.name}:\n{self.__str__()}',
                         'attachments': [{'type': 'image', 'url': f'{alert_color}'}]}
         logging.info(post_message)
 
