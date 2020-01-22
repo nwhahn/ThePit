@@ -1,13 +1,12 @@
-import configparser
 import logging
-import os
 import io
-import pathlib
 from typing import List
 
 import pandas as pd
 import psycopg2
 import psycopg2.extras
+
+from lib.config_parser import ConfigNode
 
 
 class DbInfo:
@@ -18,22 +17,18 @@ class DbInfo:
 
 
 class Database:
-    def __init__(self, account):
-        config_file = pathlib.Path(os.path.dirname(os.path.abspath(__file__))) / '../config/database.cfg'
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        acc = account.lower()
-        logging.info(config[acc])
-        self.db_config = config[acc]
+    def __init__(self, config: ConfigNode, account: str):
+        print(config['database']['bitcoin_writer'])
+        self.db_config = config['database'][account]
 
     def execute(self, sql: str) -> list:
         """This function is not good for large queries"""
         logging.info(sql)
 
-        with psycopg2.connect(host=self.db_config['HOST'],
-                              user=self.db_config['USER'],
-                              password=self.db_config['PASSWORD'],
-                              dbname=self.db_config['DATABASE'],
+        with psycopg2.connect(host=self.db_config['host'],
+                              user=self.db_config['user'],
+                              password=self.db_config['password'],
+                              dbname=self.db_config['database'],
                               cursor_factory=psycopg2.extras.RealDictCursor) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(sql)
@@ -47,10 +42,10 @@ class Database:
         return output
 
     def copy(self, df: pd.DataFrame, schema: str, table: str, *args, **kwargs) -> None:
-        with psycopg2.connect(host=self.db_config['HOST'],
-                              user=self.db_config['USER'],
-                              password=self.db_config['PASSWORD'],
-                              dbname=self.db_config['DATABASE']) as connection:
+        with psycopg2.connect(host=self.db_config['host'],
+                              user=self.db_config['user'],
+                              password=self.db_config['password'],
+                              dbname=self.db_config['database']) as connection:
             with connection.cursor() as cursor:
                 s_buf = io.StringIO()
                 logging.info(df)
@@ -65,15 +60,16 @@ class Database:
         return pd.DataFrame(self.execute(sql))
 
 
+def create_connection(config: ConfigNode, account: str):
+    """factor function just in case"""
+    return Database(config, account)
+
+
 def get_columns(db_inf: DbInfo) -> List[str]:
     query = f"SELECT column_name from information_schema.columns where table_schema = '{db_inf.schema}' and " \
             f"table_name = '{db_inf.table}'"
     logging.info(query)
     return [r['column_name'] for r in db_inf.database.execute(query)]
-
-
-def get_default():
-    return Database('DATABASE_READER')
 
 
 if __name__ == '__main__':

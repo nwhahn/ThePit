@@ -1,3 +1,7 @@
+"""
+TODO: Does this module need a config file?
+"""
+
 from argparse import ArgumentParser
 
 import pandas as pd
@@ -7,8 +11,8 @@ import lib.alerting as alerting
 from lib.fs import make_symlink
 
 __app__ = 'symbols_download'
-logger = get_logger(__name__, __app__)
-alerter = alerting.get_alerter()
+logger = get_logger(__app__)
+alerter = alerting.get_alerter(__app__)
 
 arca_location = 'ftp://ftp.nyxdata.com/ARCASymbolMapping/ARCASymbolMapping.txt'
 nyse_location = 'ftp://ftp.nyxdata.com/NYSESymbolMapping/NYSESymbolMapping.txt'
@@ -72,7 +76,7 @@ def main_impl(args) -> int:
     return 0
 
 
-@app_main(logger, alerter, __app__)
+@app_main(logger, alerter)
 def main():
     parser = ArgumentParser(description='Script to download refdata files, will maintain symlinks')
     parser.add_argument('--arca', help='arca ftp', action='store_true')
