@@ -132,7 +132,7 @@ def iex_ohlc(config: config_parser.ConfigNode):
     alerter.info(f"Number of missing symbols: {len(failed_syms)}")
 
 
-@app_main(logger)
+@app_main(logger, alerter)
 def main():
     parser = ArgumentParser(description="Download ohlc for yesterday")
     parser.add_argument('--token', help='iex token, dont save to git ;)', required=True)
