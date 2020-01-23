@@ -65,6 +65,7 @@ def inst_df(config: config_parser.ConfigNode) -> None:
 
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
+    alerter.info(f"Inserted {len(df)} rows into {db_inf.schema}.{db_inf.table}")
 
 @app_main(logger, alerter)
 def main():

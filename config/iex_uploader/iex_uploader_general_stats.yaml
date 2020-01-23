@@ -1,5 +1,5 @@
 importing:  # this will be how imports are done through this, uses relative imports
-  database: database.yaml
+  database: ../database.yaml
 
 iex_uploader:
   path    : /home/pi/iex_ohlc

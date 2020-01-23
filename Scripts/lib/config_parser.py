@@ -66,7 +66,7 @@ def config_argparse(parser: argparse.ArgumentParser) -> ConfigNode:
         sys.exit(1)
 
     with open(args.config) as f:
-        config = yaml.full_load(f)
+        config = yaml.load(f)
 
     config['args'] = vars(args)
 
@@ -74,7 +74,7 @@ def config_argparse(parser: argparse.ArgumentParser) -> ConfigNode:
         for k, v in config['importing'].items():
             logging.info(f"Adding files for {k} into config_argparse")
             with open(config_path.parent / v) as f:
-                config[k] = yaml.full_load(f)
+                config[k] = yaml.load(f)
 
     config_node = ConfigNode(config)
     map_config_overrides(unkown_args, config_node)
