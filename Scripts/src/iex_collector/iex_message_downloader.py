@@ -100,6 +100,8 @@ def ohlc_request(syms: List[str], token: str, message: str, date_range: str = No
 
 
 def iex_ohlc(config: config_parser.ConfigNode):
+    alerter.info(f"Downloading for message: {config['iex_messaging.message']}")
+    logger.info(f"Downloading for message: {config['iex_messaging.message']}")
 
     db_inf = database.DbInfo(database.create_connection(config, config['iex_messaging.db_acc']),
                              config['iex_messaging.schema'], config['iex_messaging.table'])
