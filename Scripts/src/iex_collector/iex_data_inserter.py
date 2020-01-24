@@ -44,6 +44,9 @@ def dateify(df: pd.DataFrame, date_val: str) -> pd.DataFrame:
 
 
 def inst_df(config: config_parser.ConfigNode) -> None:
+    alerter.info(f"Uploading for message: {config['iex_uploader.message']}")
+    logger.info(f"Uploading for message: {config['iex_uploader.message']}")
+
     db_inf = DbInfo(Database(config, config['iex_uploader.db_acc']), config['iex_uploader.schema'],
                     config['iex_uploader.table'])
 
@@ -66,6 +69,7 @@ def inst_df(config: config_parser.ConfigNode) -> None:
     db_inf.database.copy(df, db_inf.schema, db_inf.table)
 
     alerter.info(f"Inserted {len(df)} rows into {db_inf.schema}.{db_inf.table}")
+
 
 @app_main(logger, alerter)
 def main():
