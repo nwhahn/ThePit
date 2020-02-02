@@ -21,3 +21,11 @@ stockbois_writer:
     password : 98kVdckVUTmm3reQ
     database : prod
     type     : postgres
+
+scripts_reader:
+    host     : 192.168.1.5
+    port     : 5432
+    user     : scripts_reader
+    password : NhaQEmgL82rHjy4j
+    database : prod
+    type     : postgres
