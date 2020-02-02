@@ -18,7 +18,6 @@ class DbInfo:
 
 class Database:
     def __init__(self, config: ConfigNode, account: str):
-        print(config['database']['bitcoin_writer'])
         self.db_config = config['database'][account]
 
     def execute(self, sql: str) -> list:
@@ -60,9 +59,17 @@ class Database:
         return pd.DataFrame(self.execute(sql))
 
 
-def create_connection(config: ConfigNode, account: str):
+def create_connection(config: ConfigNode, account: str) -> Database:
     """factor function just in case"""
     return Database(config, account)
+
+
+def get_db_default() -> Database:
+    """function to just get a database connection no config needed, should be read only
+    TODO make it read only lol"""
+    config = {'database': {'scripts_reader': {'host': '192.168.1.5', 'port': 5432, 'user': 'scripts_reader',
+                                              'password': 'NhaQEmgL82rHjy4j', 'database': 'prod', 'type': 'postgres'}}}
+    return Database(ConfigNode(config), 'scripts_reader')
 
 
 def get_columns(db_inf: DbInfo) -> List[str]:
